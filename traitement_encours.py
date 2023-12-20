@@ -18,17 +18,6 @@ class DataDate:
 
 
 TIME_PARAMS = "DAYS"
-TICKET_PARAMS = "INCIDENT"
-
-libelle_Created = ''
-libelle_closed = ''
-
-if TICKET_PARAMS == "INCIDENT":
-    libelle_Created = 'sys_created_on'
-    libelle_closed = 'u_datetime_for_real_end'
-elif TICKET_PARAMS == "DS":
-    libelle_Created = 'sys_created_on'
-    libelle_closed = 'closed_at'
 
 start_time = time.time()
 
@@ -46,15 +35,15 @@ with warn.catch_warnings(record=True):  # Supprime le warning
     exportFile = pd.read_csv(path, encoding="ISO-8859-1", engine="c")
 
 for index, row in tqdm(exportFile.iterrows(), total=exportFile.shape[0], desc="Tickets traités"):
-    Created = pd.to_datetime(row[libelle_Created], dayfirst=True)
+    Created = pd.to_datetime(row["sys_created_on"], dayfirst=True)
     data.append(vars(DataDate(row['number'], Created, 'Created')))
 
     #si pas de date de clôture, on set la date de clôture à aujourd'hui afin de créer des "encours" jusqu'à aujourd'hui
     #mais on ne met pas de dâte de clôture
-    if pd.isnull(row[libelle_closed]):
+    if pd.isnull(row["u_datetime_for_real_end"]):
         Closed = dt.datetime.now()
     else:
-        Closed = pd.to_datetime(row[libelle_closed], dayfirst=True)
+        Closed = pd.to_datetime(row["u_datetime_for_real_end"], dayfirst=True)
         data.append(vars(DataDate(row['number'], Closed, 'Closed')))
 
     #print("Created : " + str(Created) + " Closed : " + str(Closed) + " Now : " + str(dt.datetime.now()))
