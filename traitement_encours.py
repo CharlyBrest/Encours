@@ -5,7 +5,6 @@ import time
 import math
 import datetime as dt
 
-from dateutil.relativedelta import relativedelta
 from tkinter.filedialog import askopenfilename
 from tqdm import tqdm
 
@@ -36,10 +35,14 @@ print("Lecture du fichier")
 
 dataStock = []
 dataMultiEfs = []
+endDate = ''
 
 with warn.catch_warnings(record=True):  # Supprime le warning
     warn.simplefilter("always")
     exportFile = pd.read_csv(path, encoding="ISO-8859-1", engine="c")
+
+endDate = 'u_datetime_for_real_end' if exportFile['number'].loc[0].startswith('TCK') else 'closed_at'
+print( 'Utilisation de la date réelle de clôture (spécifique à la table des incidents).' if endDate == 'u_datetime_for_real_end' else  'Utilisation de la date de clôture (Générique).')
 
 for index, row in tqdm(exportFile.iterrows(), total=exportFile.shape[0], desc="Tickets traités"):
 
@@ -54,25 +57,16 @@ for index, row in tqdm(exportFile.iterrows(), total=exportFile.shape[0], desc="T
 
     #si pas de date de clôture, on set la date de clôture à aujourd'hui afin de créer des "encours" jusqu'à aujourd'hui
     #mais on ne met pas de dâte de clôture
-    if pd.isnull(row["u_datetime_for_real_end"]):
+    # u_datetime_for_real_end closed_at
+    if pd.isnull(row[endDate]):
         Closed = dt.datetime.now()
     else:
-        Closed = pd.to_datetime(row["u_datetime_for_real_end"], dayfirst=True)
+        Closed = pd.to_datetime(row[endDate], dayfirst=True)
         dataStock.append(vars(DataDate(row['number'], Closed, 'Closed')))
-
-    #print("Created : " + str(Created) + " Closed : " + str(Closed) + " Now : " + str(dt.datetime.now()))
-    if TIME_PARAMS == 'MONTHS':
-        Created.replace(day=1)
-        Closed.replace(day=1)
 
     while Created <= Closed:
         dataStock.append(vars(DataDate(row['number'], Created, 'En cours')))
-
-        # print("Number : " + str(row['number']) + " Created : " + str(Created))
-        if TIME_PARAMS == "DAYS":
-            Created += dt.timedelta(days=1)
-        elif TIME_PARAMS == "MONTHS":
-            Created += relativedelta(months=1)
+        Created += dt.timedelta(days=1)
 
 print("Création du fichier encours.csv")
 df = pd.DataFrame(dataStock)
