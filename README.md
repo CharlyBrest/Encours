@@ -5,5 +5,5 @@ Ce script crée 2 fichiers :
   - multi_efs : nouvelle table qui décompose le string multi_efs en 1 enregistrement par efs afin de faciliter les filtres
 
 # Build EXE
--For Windows : py -m PyInstaller -F -c traitement_encours.py
--For Linux : pyinstaller -F -c traitement_encours.py
+- For Windows : py -m PyInstaller -F -c traitement_encours.py
+- For Linux : pyinstaller -F -c traitement_encours.py
