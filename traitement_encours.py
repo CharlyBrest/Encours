@@ -59,7 +59,7 @@ for index, row in tqdm(exportFile.iterrows(), total=exportFile.shape[0], desc="T
     #mais on ne met pas de dâte de clôture
     # u_datetime_for_real_end closed_at
     if pd.isnull(row[endDate]):
-        Closed = dt.datetime.now()
+        Closed = dt.datetime.strptime(dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
     else:
         Closed = pd.to_datetime(row[endDate], dayfirst=True)
         dataStock.append(vars(DataDate(row['number'], Closed, 'Closed')))
