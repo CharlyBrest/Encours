@@ -5,6 +5,7 @@ import time
 import math
 import datetime as dt
 
+from datetime import datetime
 from tkinter.filedialog import askopenfilename
 from tqdm import tqdm
 
@@ -21,8 +22,6 @@ class DataDate:
         self.date = date
         self.type = type
 
-
-TIME_PARAMS = "DAYS"
 
 start_time = time.time()
 
@@ -42,7 +41,7 @@ with warn.catch_warnings(record=True):  # Supprime le warning
     exportFile = pd.read_csv(path, encoding="ISO-8859-1", engine="c")
 
 endDate = 'u_datetime_for_real_end' if exportFile['number'].loc[0].startswith('TCK') else 'closed_at'
-print( 'Utilisation de la date réelle de clôture (spécifique à la table des incidents).' if endDate == 'u_datetime_for_real_end' else  'Utilisation de la date de clôture (Générique).')
+print('Utilisation de la date réelle de clôture (spécifique à la table des incidents).' if endDate == 'u_datetime_for_real_end' else  'Utilisation de la date de clôture (Générique).')
 
 for index, row in tqdm(exportFile.iterrows(), total=exportFile.shape[0], desc="Tickets traités"):
 
@@ -52,16 +51,16 @@ for index, row in tqdm(exportFile.iterrows(), total=exportFile.shape[0], desc="T
         entrie = MultiEfs(row['number'], efs)
         dataMultiEfs.append(vars(entrie))
 
-    Created = pd.to_datetime(row["sys_created_on"], dayfirst=True)
+    Created = pd.to_datetime(row["sys_created_on"], dayfirst=True).date()
     dataStock.append(vars(DataDate(row['number'], Created, 'Created')))
 
     #si pas de date de clôture, on set la date de clôture à aujourd'hui afin de créer des "encours" jusqu'à aujourd'hui
     #mais on ne met pas de dâte de clôture
     # u_datetime_for_real_end closed_at
     if pd.isnull(row[endDate]):
-        Closed = dt.datetime.strptime(dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+        Closed = datetime.today().date()
     else:
-        Closed = pd.to_datetime(row[endDate], dayfirst=True)
+        Closed = pd.to_datetime(row[endDate], dayfirst=True).date()
         dataStock.append(vars(DataDate(row['number'], Closed, 'Closed')))
 
     while Created <= Closed:
