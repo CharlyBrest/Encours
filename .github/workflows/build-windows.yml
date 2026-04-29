@@ -72,7 +72,7 @@ jobs:
           }
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-windows
           path: ${{ env.APP_NAME }}-windows.zip
