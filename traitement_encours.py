@@ -47,15 +47,13 @@ print('Utilisation de la date de clôture (Générique).' if endDate == 'closed_
 for index, row in tqdm(exportFile.iterrows(), total=exportFile.shape[0], desc="Tickets traités"):
 
     #morceau de code pour le multi efs
-    #les problemes n'ont pas de champs multi efs donc j'ajoute la condition
-    if('u_efs_multi' in row.iloc[[0]]):
-        multiEfs = str(row['u_efs_multi']).split(', ')
-        for efs in multiEfs:
-            entrie = MultiEfs(row['number'], efs)
-            dataMultiEfs.append(vars(entrie))
+    multiEfs = str(row['u_efs_multi']).split(', ')
+    for efs in multiEfs:
+        entrie = MultiEfs(row['number'], efs)
+        dataMultiEfs.append(vars(entrie))
 
     #la date de création sur les problèmes n'est pas définis par la même variable
-    startDate = 'sys_created_on' if 'sys_created_on' in row.iloc[[0]] else 'opened_at'
+    startDate = 'sys_created_on' if 'sys_created_on' in exportFile else 'opened_at'
 
     Created = pd.to_datetime(row[startDate], dayfirst=True).date()
     dataStock.append(vars(DataDate(row['number'], Created, 'Created')))
@@ -79,10 +77,8 @@ df.to_csv("encours.csv", index=False)
 
 print("Fichier encours créé. Temps total : ", math.ceil(time.time() - start_time), ' secondes.')
 
-#les problemes n'ont pas de champs multi efs donc j'ajoute la condition
-if('u_efs_multi' in row.iloc[[0]]):
-    print("Création du fichier multi_efs.csv")
-    df = pd.DataFrame(dataMultiEfs)
-    df.to_csv("multi_efs.csv", index=False)
+print("Création du fichier multi_efs.csv")
+df = pd.DataFrame(dataMultiEfs)
+df.to_csv("multi_efs.csv", index=False)
 
-    print("Fichier multi_efs créé. Temps total : ", math.ceil(time.time() - start_time), ' secondes.')
+print("Fichier multi_efs créé. Temps total : ", math.ceil(time.time() - start_time), ' secondes.')
