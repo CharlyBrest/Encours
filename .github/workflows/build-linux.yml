@@ -1,0 +1,82 @@
+name: Build Linux executable
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+      name: Build Linux executable
+      runs-on: ubuntu-latest
+      env:
+        ENTRY_POINT: traitement_encours.py 
+        APP_NAME: encours_linux 
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.12.3'
+
+        - name: Cache pip
+          uses: actions/cache@v4
+          with:
+            path: ~/.cache/pip
+            key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+            restore-keys: |
+              ${{ runner.os }}-pip-
+
+        - name: Install dependencies & PyInstaller
+          run: |
+            python -m pip install --upgrade pip
+            if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            pip install pyinstaller
+            pip install tqdm
+            pip install pandas
+
+        - name: Build with PyInstaller
+          run: |
+            # Exemple basique : build en --onefile
+            # Pour ajouter une icône ou des données: --add-data "data/file.txt:dest_folder"
+            pyinstaller --noconfirm --onefile --name "${APP_NAME}" "${ENTRY_POINT}"
+
+        - name: Ensure executable permission & smoke test
+          run: |
+            EXE="dist/${APP_NAME}"
+            if [ -f "$EXE" ]; then
+              chmod +x "$EXE"
+              echo "Running smoke test: $EXE --help"
+              "$EXE" --help || true
+            else
+              echo "Executable not found: $EXE" >&2
+              exit 1
+            fi
+
+        - name: Strip binary to reduce size (optional)
+          run: |
+            EXE="dist/${APP_NAME}"
+            if command -v strip >/dev/null 2>&1 && [ -f "$EXE" ]; then
+              strip "$EXE" || true
+            fi
+
+        - name: Package artifact (tar.gz)
+          run: |
+            TAR_NAME="${APP_NAME}-linux.tar.gz"
+            if [ -f "dist/${APP_NAME}" ]; then
+              tar -czf "$TAR_NAME" -C dist "${APP_NAME}"
+              echo "Created $TAR_NAME"
+            else
+              echo "dist/${APP_NAME} introuvable" >&2
+              exit 1
+            fi
+
+        - name: Upload artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: ${{ env.APP_NAME }}-linux
+            path: ${{ env.APP_NAME }}-linux.tar.gz
