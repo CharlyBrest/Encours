@@ -48,17 +48,54 @@ jobs:
           # Pour ajouter des fichiers : --add-data "data.txt;dest_folder"
           pyinstaller --noconfirm --onefile --name "$env:APP_NAME" "$env:ENTRY_POINT"
 
-      - name: Smoke test the generated exe (quick run)
+      - name: Smoke test GUI exe (detached, safe)
         shell: pwsh
         run: |
           $exe = Join-Path -Path (Resolve-Path dist).Path -ChildPath ("$env:APP_NAME.exe")
           Write-Host "Exe path: $exe"
-          if (Test-Path $exe) {
-            # Lancer l'exécutable (adapter les arguments si nécessaire)
-            & $exe --help || & $exe
-          } else {
+          if (-not (Test-Path $exe)) {
             Write-Error "Executable not found"
+            exit 1
           }
+
+          # Préférence : lancer avec un flag CI si l'app le supporte (évite les interactions GUI)
+          $args = '--ci'
+
+          Write-Host "Starting process with args: $args"
+          $proc = Start-Process -FilePath $exe -ArgumentList $args -PassThru -WindowStyle Hidden
+
+          # Attendre un peu pour laisser l'app démarrer
+          Start-Sleep -Seconds 8
+
+          # Vérifier que le process existe
+          $running = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
+          if (-not $running) {
+            Write-Error "Le process ne s'est pas lancé ou est terminé immédiatement (PID: $($proc.Id))"
+            exit 1
+          }
+
+          Write-Host "Process démarré (PID: $($proc.Id)). Tentative de fermeture propre..."
+          try {
+            # Tenter de fermer proprement la fenêtre principale
+            if ($proc.CloseMainWindow()) {
+              Write-Host "CloseMainWindow envoyé, attente d'arrêt (max 10s)..."
+              $proc | Wait-Process -Timeout 10
+              if (Get-Process -Id $proc.Id -ErrorAction SilentlyContinue) {
+                Write-Host "Toujours actif après timeout, arrêt forcé"
+                Stop-Process -Id $proc.Id -Force
+              } else {
+                Write-Host "Arrêt propre effectué"
+              }
+            } else {
+              Write-Host "Impossible d'envoyer CloseMainWindow (pas de fenêtre ou non supporté), arrêt forcé"
+              Stop-Process -Id $proc.Id -Force
+            }
+          } catch {
+            Write-Warning "Erreur lors de la fermeture: $_. Arrêt forcé en cours."
+            Stop-Process -Id $proc.Id -Force
+          }
+
+          Write-Host "Smoke test GUI terminé avec succès"
 
       - name: Package artifact (zip)
         shell: pwsh
