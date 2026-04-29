@@ -13,6 +13,6 @@ A chaque mise à jour de l'éxécutable, 2 actions github sont automatiquement l
 - Build Linux executable
 - Build windows executable
 
-En fonction de votre système d'exploitation, cliqué sur la dernière action de se type.
+En fonction de votre système d'exploitation, cliquez sur la dernière action de se type.
 En bas de la page dans la rubrique "Artifacts" vous trouverez y trouverez votre éxecutable dans un format compressé.
 
