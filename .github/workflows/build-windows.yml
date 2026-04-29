@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     env:
       ENTRY_POINT: traitement_encours.py
-      APP_NAME: encours_windows.exe
+      APP_NAME: encours_windows
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
