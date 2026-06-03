@@ -41,7 +41,7 @@ with warn.catch_warnings(record=True):  # Supprime le warning
     warn.simplefilter("always")
     exportFile = pd.read_csv(path, encoding="ISO-8859-1", engine="c")
 
-endDate = 'closed_at' if exportFile['number'].loc[0].startswith('DS') else 'u_datetime_for_real_end'
+endDate = 'closed_at' if exportFile['number'].loc[0].startswith(('DS', 'PRBACT')) else 'u_datetime_for_real_end'
 print('Utilisation de la date de clôture (Générique).' if endDate == 'closed_at' else  'Utilisation de la date réelle de clôture (spécifique à la table des incidents).')
 
 for index, row in tqdm(exportFile.iterrows(), total=exportFile.shape[0], desc="Tickets traités"):
